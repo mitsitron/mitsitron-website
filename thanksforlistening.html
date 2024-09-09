@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mitsitron - Thanks for listening</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <figure class="background"><img src="/images/background_image/3.jpg" alt=""></figure>
+<nav class="home">
+<a href="/">
+    &#8711; 
+</a>
+<a href="performances.html">&#8592;</a>
+</nav>
+<div class="description-text">
+    <h1>
+        Thanks for listening
+    </h1> 
+    <h2>
+        2023-ongoing
+    </h2>
+    
+    <p>
+        Thanks for Listening is a live coding performance, a process created by a body, cables, a midi device, a microphone, a sound card, Sonic Pi, speakers, memories,desires, discomforts and vulnerability.
+        <br><br>
+        The urgency that nourished this project were questions such as: 
+        How do we embody gender by the ways we use our voices? How gender binary categorises bodies depending on their vocal frequency behaviour? 
+        How sound production and instruments when located in cis-heteronormative spaces potentially amplify biases? 
+        Or how can they strengthen reparative processes for those bodies marked by gender?
+        <br><br>
+        In this performance, I position my body as an extension of sound and sound technology. 
+        I create voice through my phonatory system, which gets modulated in controllable and uncontrollable ways. 
+        A midi controller which receives data from a live coding software is pitching, stretching and looping the voice through knobs, faders and buttons.
+        <br><br>
+        
+        <!-- <strong>connections:</strong> research, coding, performance, sound design -->
+    </p>
+    
+    <a href="https://youtu.be/J8ko4CgI450?si=Pir0aDyRiUDBXqM" target="_blank"> 
+    Performace at Iterations 2023
+    </a>
+    <div class="image">
+        <img src="./images\thanks for listening\i2.jpg" alt="do i reach you?">
+    </div> 
+    <div>image source: Iterations 2023 live stream</div>
+    <pre>
+#heyy can you hear me?
+#do I reach you?
+#do I wanna reach you?
+#do you want to be reached by me?
+      
+#I am so happy that you are here tonight
+#I am so happy that you came here to listen to me
+#Thank you, thank you so much
+      
+#I would like to be bigger
+#i don't know what to do with all this energy
+#i was taught to be scared of it
+#I am a small creature
+#Trapped inseid a eh eh ehe eh eh eh... body
+#What do you think?
+#What do you think of me?
+      
+#They wanted to put my head into the ground
+#They didn't want us! They don't want us!
+#I can stay in the corner and observe
+#I can stay I can open my ears and listen
+#We have learnt to hide
+#It's hard to not be recognised
+#It's like you don't exist, but you exist hahaha
+#You have a body
+      
+#I like to adapt A LOT that's what i do in life
+#I just adapt my voice
+#What ? What ? Whaat? What the fuck is this?
+#STOP STOP STOOOOP
+#What do you do usually? Do you adapt? Do you resist? Do you fight?
+#DO you fly? Do you stay??
+      
+#i want to be regulated
+#i want ot be filtered
+#How do you filter what you hear?
+#FILTER MEEEEE
+      
+#but did this even happen this way?
+#Did she say this did she love me or i don't know
+#I wanna go in the corner and suck my thumb
+      
+#do i need to be stronger?
+#do i need to be oversized?
+    #do i need to shrink?
+    #do i need to be something more?
+        #do i need to be something less?
+        #do i need to stand out? maybe
+            #is that ok?
+                  
+            #i am sorry, don't leave me
+            #thank you i love you
+            #thank you that you came to listen to me
+                  
+                  #adding amplitude level
+                  with_fx :level do |le|
+                    #adding low pass filter
+                    with_fx :lpf, mix: 0 do |l|
+                      #adding pitch shifter
+                      with_fx :pitch_shift, pitch_dis: 0.001 do |p|
+                        #adding echo
+                        with_fx :echo, pre_mix: 0, decay: 2 do |e|
+                          #adding reverb
+                          with_fx :reverb, pre_mix: 1, room: 1 do |r|
+                            #for latency prevention
+                            use_real_time
+                            #inserting the microphone to the system
+                            live_audio :mic
+                            
+                            #a live_loop for mapping the midi faders, buttons and knobs with the above effects
+                            live_loop :process do
+                              #for latency prevention
+                              use_real_time
+                              #the variables cc and val are syncronised with the midi machine i use
+                              cc, val = sync "/midi:5-_zero_mkii_0:1/control_change"
+                              #the numbers that cc corresponds with are the different faders, knobs buttons
+                              if cc == 23
+                                control le, amp: val / 127.0
+                              end
+                              if cc == 24
+                                if cc > 63.5
+                                  control p, pitch: (val - 63.5) / 1.7
+                                else
+                                  control p, pitch: (-val + 63.5) / 6
+                                end
+                              end
+                              if cc == 25
+                                control e, pre_mix: val / 127
+                              end
+                              if cc == 26
+                                control e, phase: val * 0.1 + 0.000001
+                              end
+                              if cc == 73
+                                control e, decay: val / 5 + 0.000001
+                              end
+                              if cc == 75
+                                control r, pre_mix: val / 127
+                              end
+                              if cc == 70
+                                control r, room: val / 127
+                              end
+                              if cc == 20
+                                control l, cutoff: val
+                              end
+                              if cc == 14
+                                control l, mix: val /127.0
+                              end
+                              #create a buffer of 10 seconds
+                              if cc == 77
+                                with_fx :record, buffer: [:voice,10] do
+                                  print "record recording"
+                                  use_real_time
+                                  live_audio :mic1
+                                end
+                              end
+                              #play the buffer
+                              if cc == 95
+                                #print "play recording"
+                                sample buffer[:voice,10]
+                              end
+                              #small stretch of the buffer
+                              if cc == 7
+                                control sample buffer[:voice,10], rate: val * 0.1 + 0.000001
+                              end
+                              #bigger stretch of the buffer
+                              if cc == 10
+                                control sample buffer[:voice,10], rate: val + 0.000001
+                              end
+                              #reverse stretch of the buffer
+                              if cc == 22
+                                control sample buffer[:voice,10], rate: -val * 0.1 + 0.000001
+                              end
+                              #create a buffer of 100 seconds
+                              if cc == 82
+                                with_fx :record, buffer: [:voice2,100] do
+                                  print "record recording"
+                                  use_real_time
+                                  live_audio :mic1
+                                end
+                              end
+                              #play the buffer
+                              if cc == 83
+                                print "play recording"
+                                sample buffer[:voice2,100]
+                              end
+                              #small stretch of the buffer
+                              if cc == 74
+                                control sample buffer[:voice2,100], rate: val * 0.1 + 0.000001
+                              end
+                              #bigger stretch of the buffer
+                              if cc == 71
+                                control sample buffer[:voice2,100], rate: val + 0.000001
+                              end
+                              #reverse stretch of the buffer
+                              if cc == 85
+                                control sample buffer[:voice2,100], rate: -val * 0.1 + 0.000001
+                              end
+                            end
+                          end
+                        end
+                      end
+                    end
+                  end
+                  
+                  #creating a second channel for my voice. 
+                  #this one is for the moments that i want the signal created by my vocal chords to be as not altered as possible
+                  with_fx :level do |le3|
+                    with_fx :pitch_shift, pitch_dis: 0.001 do |p1|
+                      live_loop :process2 do
+                        use_real_time
+                        cc, val = sync "/midi:5-_zero_mkii_0:1/control_change"
+                        if cc == 72
+                          control le3, amp: val / 127.0
+                        end
+                        if cc == 92 and val == 0
+                          use_real_time
+                          live_audio :mic3
+                        end
+                        if cc == 92 and val == 127
+                          kill live_audio :mic3
+                        end
+                        if cc == 19
+                          if cc > 63.5
+                            control p1, pitch: (val - 63.5) / 1.7
+                          else
+                            control p1, pitch: (-val + 63.5) / 6
+                          end
+                        end
+                      end
+                    end
+                  end
+    </pre> 
+    <div>Sonic pi code documentation</div>
+</div>
+</body>
+
+</html>
